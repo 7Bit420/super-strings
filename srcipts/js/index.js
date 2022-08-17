@@ -6,6 +6,7 @@
         #height = 10
 
         #grid = []
+        #attemptedPaths = []
         #elmGrid = []
         gridElm
 
@@ -20,6 +21,8 @@
         #factors = []
 
         #nabourListner
+
+        score = 0
 
         constructor(width, height) {
             this.#width = width ?? 10
@@ -52,12 +55,7 @@
             console.log(this.#grid)
         }
 
-        #minMax(min, x, max) {
-            return Math.min(Math.max(x, min), max)
-        }
-
         getNabouringCells(dx, dy) {
-            console.log(dx, dy)
             var cells = []
             for (
                 let x = Math.max(dx - 1, 0);
@@ -73,7 +71,7 @@
                     cells.push({
                         x: x,
                         y: y,
-                        cell: this.#elmGrid[x]?.[y]
+                        cell: this.#elmGrid[x][y]
                     })
                 }
             }
@@ -84,6 +82,7 @@
             this.#crntX = x
             this.#crntY = y
             this.#crntElm = elm
+            this.#crntElm.style.background = 'green'
             this.#pathStarted = true
             this.#crntPath.push(elm)
             this.#crntNabours = this.getNabouringCells(x, y)
@@ -95,12 +94,10 @@
 
         addPoint(elm, x, y) {
             console.log(this.#crntPath)
-            this.#crntPath.push(this.#crntElm)
-            this.#crntElm.style.background = 'green'
             this.#crntElm = elm
+            this.#crntPath.push(this.#crntElm)
             this.#crntX = x
             this.#crntY = y
-            console.log(this.#crntNabours.map(r => r.cell))
             this.#crntNabours.forEach(t => {
                 t.cell.style.background = ''
                 t.cell.removeEventListener('mousedown', this.#nabourListner)
@@ -110,20 +107,53 @@
                 t.cell.style.background = 'yellow'
                 t.cell.addEventListener('mousedown', this.#nabourListner)
             })
+            this.#crntElm.style.background = 'green'
         }
 
         endPath() {
+            var score = 0
+            this.#crntNabours.forEach(t => {
+                t.cell.style.background = ''
+                t.cell.removeEventListener('mousedown', this.#nabourListner)
+            })
 
+            var path = this.#crntPath.map(t => Number(t.innerText)).sort((a, b) => a - b)
+            if (!this.#attemptedPaths.includes(path)) {
+                alert('Invalid Path')
+                return
+            }
+
+            this.#attemptedPaths.push(path)
+
+            if (path.reduce((prev, crnt) => crnt * prev, 1) == this.#number) {
+                this.score += this.#crntPath.reduce((crnt, prev) => {
+                    prev.style.background = 'blue'
+                    return (Math.ceil(Number(prev.innerText) / 25) + crnt)
+                }, 0)
+            } else {
+                alert('Invalid Path')
+                this.#crntPath.forEach((t) => {
+                    t.style.background = ''
+                })
+            }
+            this.#crntNabours = []
+            this.#crntPath = []
+            this.#crntX = 0
+            this.#crntY = 0
+            this.#crntElm = undefined
+            this.#pathStarted = false
+            console.log(score)
         }
 
         /**
          * @param {MouseEvent} e 
          */
         #nabourListnerN(e) {
+            var x = Number(e.target.getAttribute('x')),
+                y = Number(e.target.getAttribute('y'))
             this.addPoint(
-                e.target,
-                e.target.getAttribute('x'),
-                e.target.getAttribute('y')
+                this.#elmGrid[x][y],
+                x, y
             )
         }
 
@@ -142,7 +172,7 @@
 
         genElmGrid() {
             this.#elmGrid = Array(this.#width).fill(undefined).map(t => new Array(this.#height));
-            this.gridElm = document.createElement('div')
+            this.gridElm = document.createElement('table')
             for (let x = 0; x < this.#width; x++) {
                 var row = document.createElement('tr')
                 for (let y = 0; y < this.#height; y++) {
@@ -192,13 +222,31 @@
             await new Promise(r => req.addEventListener('load', r))
             this.#numbs = JSON.parse(req.responseText)
         }
+
+        get number() { return this.#number }
     }
 
     await game.init()
     var ssGame = new game()
+    globalThis.ssGame = ssGame
+    var finish = document.createElement('button')
+    var number = document.createElement('p')
+    var score = document.createElement('p')
+
+    finish.innerText = 'Finish Attempt'
+    number.innerText = `Number: ${ssGame.number}`
+    score.innerText = `Score: ${ssGame.score}`
+
+    finish.addEventListener('click', () => {
+        ssGame.endPath()
+        score.innerText = `Score: ${ssGame.score}`
+    })
 
     if (!document.readyState == 'compleate') await new Promise(r => document.addEventListener('DOMContentLoaded', r));
 
     document.body.appendChild(ssGame.gridElm)
+    document.body.appendChild(finish)
+    document.body.appendChild(number)
+    document.body.appendChild(score)
 
 })()

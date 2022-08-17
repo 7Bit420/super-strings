@@ -1,7 +1,37 @@
+* {
+    --box-size: 5vh;
+    margin: 0px;
+    padding: 0px;
+}
+
+table {
+    display: table;
+    grid-column: var(--box-size);
+    grid-row: var(--box-size);
+}
+
 td {
-    width: 5vh;
-    height: 5vh;
+    height: var(--box-size);
+    width: var(--box-size);
     border: 1px solid black;
     text-align: center;
     vertical-align: middle;
+    margin: 0px;
+    padding: 0px;
+}
+
+tr:first-child>td:first-child {
+    border-top-left-radius: 5px;
+}
+
+tr:first-child>td:last-child {
+    border-top-right-radius: 5px;
+}
+
+tr:last-child>td:first-child {
+    border-bottom-left-radius: 5px;
+}
+
+tr:last-child>td:last-child {
+    border-bottom-right-radius: 5px;
 }

@@ -293,7 +293,7 @@
         constructor(width, height) {
             this.#width = width ?? 10
             this.#height = height ?? 10
-            var n = game.#numbs[Math.floor(Math.random() * game.#numbs.length)]
+            var n = game.#numbs[0]//game.#numbs[Math.floor(Math.random() * game.#numbs.length)]
             this.#number = n.n
             this.#factors = n.f
 
@@ -317,8 +317,6 @@
                 var poz = this.getRandomPosition(true)
                 this.#grid[poz.x][poz.y] = this.#factors[Math.floor(Math.random() * this.#factors.length)]
             }
-
-            console.log(this.#grid)
         }
 
         getNabouringCells(dx, dy) {
@@ -344,42 +342,65 @@
             return cells
         }
 
+        addColour(elm, colour) {
+            var colors = JSON.parse(elm.getAttribute('colours')) ?? []
+            if (colors.includes(colour)) return;
+            colors.push(colour)
+            elm.setAttribute('colours', JSON.stringify(colors))
+            elm.style.background = this.genrateConicGradient(colors)
+        }
+
+        removeColour(elm, colour) {
+            console.log(elm, colour)
+            var colors = JSON.parse(elm.getAttribute('colours')) ?? []
+            colors = colors.filter(t => t != colour)
+            elm.setAttribute('colours', JSON.stringify(colors))
+            elm.style.background = this.genrateConicGradient(colors)
+        }
+
         beginPath(elm, x, y) {
             this.#crntX = x
             this.#crntY = y
             this.#crntElm = elm
-            this.#crntElm.style.background = 'green'
+
+            this.addColour(this.#crntElm, 'green')
+
             this.#pathStarted = true
             this.#crntPath.push(elm)
             this.#crntNabours = this.getNabouringCells(x, y)
             this.#crntNabours.forEach(t => {
-                t.cell.style.background = 'yellow'
+                this.addColour(t.cell, 'yellow')
+
                 t.cell.addEventListener('mousedown', this.#nabourListner)
             })
         }
 
         addPoint(elm, x, y) {
-            console.log(this.#crntPath)
             this.#crntElm = elm
             this.#crntPath.push(this.#crntElm)
             this.#crntX = x
             this.#crntY = y
+
             this.#crntNabours.forEach(t => {
-                t.cell.style.background = t.cell.getAttribute('colour')
+                this.removeColour(t.cell, 'yellow')
+
                 t.cell.removeEventListener('mousedown', this.#nabourListner)
             })
             this.#crntNabours = this.getNabouringCells(x, y).filter(t => !this.#crntPath.includes(t.cell))
             this.#crntNabours.forEach(t => {
-                t.cell.style.background = 'yellow'
+                this.addColour(t.cell, 'yellow')
+
                 t.cell.addEventListener('mousedown', this.#nabourListner)
             })
-            this.#crntElm.style.background = 'green'
+
+            this.addColour(this.#crntElm, 'green')
+
+            this.#crntElm.addEventListener('mousedown', this.#nabourListner)
         }
 
         endPath() {
-            var score = 0
             this.#crntNabours.forEach(t => {
-                t.cell.style.background = t.cell.getAttribute('colour')
+                this.removeColour(t.cell, 'yellow')
                 t.cell.removeEventListener('mousedown', this.#nabourListner)
             })
 
@@ -390,20 +411,21 @@
                 (!this.#attemptedPaths.includes(path.join('-')))
             ) {
                 var colour = this.#colours.splice(Math.floor(Math.random() * this.#colours.length), 1)[0]
+
                 this.score += this.#crntPath.reduce((crnt, prev) => {
-                    prev.style.background = colour
-                    prev.setAttribute('colour', colour)
+                    this.removeColour(prev, 'green')
+                    this.addColour(prev, colour)
+
                     return (Math.ceil(Number(prev.innerText) / 25) + crnt)
                 }, 0)
+
                 this.#attemptedPaths.push(path.join('-'))
             } else {
                 alert('Invalid Path')
                 this.#crntPath.forEach((t) => {
-                    t.style.background = t.getAttribute('colour')
+                    this.removeColour(t, 'green')
                 })
             }
-
-            console.log(score, this.#attemptedPaths)
 
             this.#crntNabours = []
             this.#crntPath = []
@@ -411,6 +433,21 @@
             this.#crntY = 0
             this.#crntElm = undefined
             this.#pathStarted = false
+        }
+
+        /**
+         * @param {string[]} colors 
+         */
+        genrateConicGradient(colors) {
+            if (colors.length == 0) return '';
+            var offset = 0
+            var str = 'conic-gradient( '
+            var int = 360 / colors.length
+            for (let i = 0; i < (colors.length); i++) {
+                str += `${colors[i]} ${((i * int) + offset) % 360}deg ${(((i + 1) * int) + offset) % 360}deg${(i + 1) == colors.length ? '' : ','} `
+            }
+            str += ')'
+            return str
         }
 
         /**

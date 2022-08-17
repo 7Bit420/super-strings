@@ -118,18 +118,16 @@
             })
 
             var path = this.#crntPath.map(t => Number(t.innerText)).sort((a, b) => a - b)
-            if (!this.#attemptedPaths.includes(path)) {
-                alert('Invalid Path')
-                return
-            }
 
-            this.#attemptedPaths.push(path)
-
-            if (path.reduce((prev, crnt) => crnt * prev, 1) == this.#number) {
+            if (
+                (path.reduce((prev, crnt) => crnt * prev, 1) == this.#number) &
+                (!this.#attemptedPaths.includes(path))
+            ) {
                 this.score += this.#crntPath.reduce((crnt, prev) => {
                     prev.style.background = 'blue'
                     return (Math.ceil(Number(prev.innerText) / 25) + crnt)
                 }, 0)
+                this.#attemptedPaths.push(path)
             } else {
                 alert('Invalid Path')
                 this.#crntPath.forEach((t) => {

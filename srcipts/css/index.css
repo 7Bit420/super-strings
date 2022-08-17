@@ -1,0 +1,7 @@
+td {
+    width: 5vh;
+    height: 5vh;
+    border: 1px solid black;
+    text-align: center;
+    vertical-align: middle;
+}

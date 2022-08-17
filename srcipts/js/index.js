@@ -121,26 +121,28 @@
 
             if (
                 (path.reduce((prev, crnt) => crnt * prev, 1) == this.#number) &
-                (!this.#attemptedPaths.includes(path))
+                (!this.#attemptedPaths.includes(path.join('-')))
             ) {
                 this.score += this.#crntPath.reduce((crnt, prev) => {
                     prev.style.background = 'blue'
                     return (Math.ceil(Number(prev.innerText) / 25) + crnt)
                 }, 0)
-                this.#attemptedPaths.push(path)
+                this.#attemptedPaths.push(path.join('-'))
             } else {
                 alert('Invalid Path')
                 this.#crntPath.forEach((t) => {
                     t.style.background = ''
                 })
             }
+
+            console.log(score, this.#attemptedPaths)
+
             this.#crntNabours = []
             this.#crntPath = []
             this.#crntX = 0
             this.#crntY = 0
             this.#crntElm = undefined
             this.#pathStarted = false
-            console.log(score)
         }
 
         /**
@@ -222,6 +224,7 @@
         }
 
         get number() { return this.#number }
+        get attempts() { return this.#attemptedPaths }
     }
 
     await game.init()

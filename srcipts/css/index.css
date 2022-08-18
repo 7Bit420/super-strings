@@ -4,6 +4,13 @@
     padding: 0px;
 }
 
+*:hover {
+    user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
 table {
     display: table;
     grid-column: var(--box-size);

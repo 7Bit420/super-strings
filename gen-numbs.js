@@ -1,28 +1,36 @@
-const fs = require('fs')
+var secSize = 500
 
-var start = 1_000_000
-var end = 15_000_000
-
-function factors(n) {
-    let arr = [];
-    for (let i = 3; i < Math.floor(n / 2); i++) {
-        if (n % i === 0) {
-            arr.push(i);
+function genNmbers(p) {
+    const fs = require('fs')
+    
+    var start = 50 + (secSize * p)
+    var end = 500 + (secSize * p)
+    
+    function factors(n) {
+        let arr = [];
+        for (let i = 3; i < Math.floor(n / 2); i++) {
+            if (n % i === 0) {
+                arr.push(i);
+            }
+        }
+        return arr;
+    }
+    
+    var numbs = []
+    
+    for (let i = start; i < end; i+=2) {
+        var f = factors(i)
+        if (f.length > 6) {
+            numbs.push({
+                n: i,
+                f: f
+            })
         }
     }
-    return arr;
+    
+    fs.writeFileSync(`assets/lvl${p + 1}.json`, JSON.stringify(numbs))
 }
 
-var numbs = []
-
-for (let i = start; i < end; i+=2) {
-    var f = factors(i)
-    if (f.length > 6) {
-        numbs.push({
-            n: i,
-            f: f
-        })
-    }
+for (let p = 0; p < 10; p++) {
+    genNmbers(p)
 }
-
-fs.writeFileSync('assets/numbs.json', JSON.stringify(numbs))

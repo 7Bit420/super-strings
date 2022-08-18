@@ -293,7 +293,7 @@
         constructor(width, height) {
             this.#width = width ?? 10
             this.#height = height ?? 10
-            var n = game.#numbs[0]//game.#numbs[Math.floor(Math.random() * game.#numbs.length)]
+            var n = game.#numbs[Math.floor(Math.random() * game.#numbs.length)]
             this.#number = n.n
             this.#factors = n.f
 
@@ -351,7 +351,6 @@
         }
 
         removeColour(elm, colour) {
-            console.log(elm, colour)
             var colors = JSON.parse(elm.getAttribute('colours')) ?? []
             colors = colors.filter(t => t != colour)
             elm.setAttribute('colours', JSON.stringify(colors))
@@ -371,6 +370,7 @@
             this.#crntNabours.forEach(t => {
                 this.addColour(t.cell, 'yellow')
 
+                t.cell.addEventListener('mouseover', this.#nabourListner)
                 t.cell.addEventListener('mousedown', this.#nabourListner)
             })
         }
@@ -384,23 +384,27 @@
             this.#crntNabours.forEach(t => {
                 this.removeColour(t.cell, 'yellow')
 
+                t.cell.removeEventListener('mouseover', this.#nabourListner)
                 t.cell.removeEventListener('mousedown', this.#nabourListner)
             })
             this.#crntNabours = this.getNabouringCells(x, y).filter(t => !this.#crntPath.includes(t.cell))
             this.#crntNabours.forEach(t => {
                 this.addColour(t.cell, 'yellow')
 
+                t.cell.addEventListener('mouseover', this.#nabourListner)
                 t.cell.addEventListener('mousedown', this.#nabourListner)
             })
 
             this.addColour(this.#crntElm, 'green')
 
+            this.#crntElm.addEventListener('mouseover', this.#nabourListner)
             this.#crntElm.addEventListener('mousedown', this.#nabourListner)
         }
 
         endPath() {
             this.#crntNabours.forEach(t => {
                 this.removeColour(t.cell, 'yellow')
+                t.cell.removeEventListener('mouseover', this.#nabourListner)
                 t.cell.removeEventListener('mousedown', this.#nabourListner)
             })
 
@@ -454,6 +458,8 @@
          * @param {MouseEvent} e 
          */
         #nabourListnerN(e) {
+            console.log(e.buttons)
+            if (e.buttons != 1) return;
             var x = Number(e.target.getAttribute('x')),
                 y = Number(e.target.getAttribute('y'))
             this.addPoint(
@@ -520,9 +526,9 @@
         }
 
         static #numbs = [{ n: 0, f: [0] }]
-        static async init() {
+        static async init(lvl = 1) {
             var req = new XMLHttpRequest()
-            req.open('GET', 'assets/numbs.json')
+            req.open('GET', `assets/lvl${lvl}.json`)
             req.send()
             await new Promise(r => req.addEventListener('load', r))
             this.#numbs = JSON.parse(req.responseText)
@@ -532,7 +538,7 @@
         get attempts() { return this.#attemptedPaths }
     }
 
-    await game.init()
+    await game.init(10)
     var ssGame = new game()
     globalThis.ssGame = ssGame
     var finish = document.createElement('button')

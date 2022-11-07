@@ -107,3 +107,12 @@ button:hover {
     cursor: pointer;
     background: #4e4e4e;
 }
+
+select {
+    padding-left: 5px;
+    box-sizing: unset;
+    appearance: unset;
+    border: .5px solid white;
+    background: unset;
+    border-radius: 0px;
+}

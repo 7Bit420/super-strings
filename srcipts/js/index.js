@@ -1,5 +1,20 @@
 (async () => {
 
+    function blockView() {
+        var rect = document.createElement('div')
+        rect.style.width = "100vw"
+        rect.style.height = "100vh"
+        var prevStyle = document.body.style.overflow
+        document.body.style.overflow = "none"
+        rect.style.top = "0px"
+        rect.style.left = "0px"
+        rect.style.position = "fixed"
+        rect.style.zIndex = 9e6
+        rect.style.background = "rgb(200,200,200,0.5)"
+        document.body.appendChild(rect)
+        return () => { rect.remove(); document.body.style.overflow = prevStyle }
+    }
+
     /**
      * @member {HTMLTableElement} gridElm
      */
@@ -545,31 +560,55 @@
         get attempts() { return this.#attemptedPaths }
     }
 
-    await game.init(10)
-    var ssGame = new game()
-    globalThis.ssGame = ssGame
-    var finish = document.createElement('button')
-    var number = document.createElement('p')
-    var score = document.createElement('p')
 
-    finish.classList.add('finish')
-    number.classList.add('number')
-    score.classList.add('score')
+    async function initGame(level) {
+        await game.init(level)
 
-    finish.innerText = 'Finish Attempt'
-    number.innerText = `Number: ${ssGame.number}`
-    score.innerText = `Score: ${ssGame.score}`
+        var ssGame = new game()
+        globalThis.ssGame = ssGame
+        var finish = document.createElement('button')
+        var number = document.createElement('p')
+        var score = document.createElement('p')
 
-    finish.addEventListener('click', () => {
-        ssGame.endPath()
+        finish.id = "finish"
+        number.id = "number"
+        score.id = "score"
+        ssGame.gridElm.id = "gameGrid"
+
+        finish.classList.add('finish')
+        number.classList.add('number')
+        score.classList.add('score')
+
+        finish.innerText = 'Finish Attempt'
+        number.innerText = `Number: ${ssGame.number}`
         score.innerText = `Score: ${ssGame.score}`
+
+        finish.addEventListener('click', () => {
+            ssGame.endPath()
+            score.innerText = `Score: ${ssGame.score}`
+        })
+
+        document.getElementById('gameGrid').replaceWith(ssGame.gridElm)
+        document.getElementById('finish').replaceWith(finish)
+        document.getElementById('number').replaceWith(number)
+        document.getElementById('score').replaceWith(score)
+    }
+
+    if (document.readyState != 'complete') await new Promise(r => document.addEventListener('DOMContentLoaded', r));
+
+    var select = document.getElementById('level')
+    for (let i = 1; i <= 10; i++) {
+        var option = document.createElement('option')
+        option.value = i
+        option.textContent = i
+        select.appendChild(option)
+    }
+    select.value = "10"
+    select.addEventListener('change', async () => {
+        var res = blockView()
+        initGame(Number(select.value))
+        res()
     })
 
-    if (!document.readyState == 'compleate') await new Promise(r => document.addEventListener('DOMContentLoaded', r));
-
-    document.getElementById('gameGrid').replaceWith(ssGame.gridElm)
-    document.getElementById('finish').replaceWith(finish)
-    document.getElementById('number').replaceWith(number)
-    document.getElementById('score').replaceWith(score)
-
+    await initGame(10)
 })()

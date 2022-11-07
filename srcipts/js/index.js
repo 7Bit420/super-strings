@@ -1,23 +1,5 @@
 (async () => {
 
-    function primeFactors(n) {
-        var factorisation = []
-        while (n % 2 == 0) {
-            factorisation.push(n)
-            n = n / 2;
-        }
-
-        for (var i = 3; i <= Math.sqrt(n); i = i + 2) {
-            while (n % i == 0) {
-                factorisation.push(n)
-                n = n / i;
-            }
-        }
-
-        if (n > 2) factorisation.push(n);
-        return factorisation
-    }
-
     function blockView() {
         var rect = document.createElement('div')
         rect.style.width = "100vw"
@@ -575,6 +557,7 @@
         }
 
         get number() { return this.#number }
+        get factors() { return this.#factors }
         get attempts() { return this.#attemptedPaths }
     }
 
@@ -594,7 +577,7 @@
         number.id = "number"
         score.id = "score"
         ssGame.gridElm.id = "gameGrid"
-        factorisation.textContent = primeFactors(ssGame.number).join(' x ') + ' = ' + ssGame.number
+        factorisation.textContent = `Factors of ${ssGame.number}: ${ssGame.factors.join(', ')}`
 
         finish.classList.add('finish')
         number.classList.add('number')

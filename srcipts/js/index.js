@@ -1,5 +1,23 @@
 (async () => {
 
+    function primeFactors(n) {
+        var factorisation = []
+        while (n % 2 == 0) {
+            factorisation.push(n)
+            n = n / 2;
+        }
+
+        for (var i = 3; i <= Math.sqrt(n); i = i + 2) {
+            while (n % i == 0) {
+                factorisation.push(n)
+                n = n / i;
+            }
+        }
+
+        if (n > 2) factorisation.push(n);
+        return factorisation
+    }
+
     function blockView() {
         var rect = document.createElement('div')
         rect.style.width = "100vw"
@@ -560,6 +578,8 @@
         get attempts() { return this.#attemptedPaths }
     }
 
+    if (document.readyState != 'complete') await new Promise(r => document.addEventListener('DOMContentLoaded', r));
+    var factorisation = document.getElementById('factorisation')
 
     async function initGame(level) {
         await game.init(level)
@@ -574,6 +594,7 @@
         number.id = "number"
         score.id = "score"
         ssGame.gridElm.id = "gameGrid"
+        factorisation.textContent = primeFactors(ssGame.number).join(' x ') + ' = ' + ssGame.number
 
         finish.classList.add('finish')
         number.classList.add('number')
@@ -594,7 +615,6 @@
         document.getElementById('score').replaceWith(score)
     }
 
-    if (document.readyState != 'complete') await new Promise(r => document.addEventListener('DOMContentLoaded', r));
 
     var select = document.getElementById('level')
     for (let i = 1; i <= 10; i++) {

@@ -1,5 +1,8 @@
 (async () => {
 
+    /**
+     * @member {HTMLTableElement} gridElm
+     */
     class game {
 
         #width = 10
@@ -288,6 +291,9 @@
 
         #nabourListner
 
+        #highLightColour = 'orange'
+        #selectColour = 'blue'
+
         score = 0
 
         constructor(width, height) {
@@ -331,7 +337,7 @@
                     y < Math.min(dy + 2, this.#height);
                     y++
                 ) {
-                    if ((x == dx) & (y == dy)) continue;
+                    if (((x == dx) & (y == dy))) continue;
                     cells.push({
                         x: x,
                         y: y,
@@ -362,50 +368,44 @@
             this.#crntY = y
             this.#crntElm = elm
 
-            this.addColour(this.#crntElm, 'green')
+            this.addColour(this.#crntElm, this.#selectColour)
 
             this.#pathStarted = true
             this.#crntPath.push(elm)
+            this.#crntElm.setAttribute('selectable', "false")
             this.#crntNabours = this.getNabouringCells(x, y)
             this.#crntNabours.forEach(t => {
-                this.addColour(t.cell, 'yellow')
-
-                t.cell.addEventListener('mouseover', this.#nabourListner)
-                t.cell.addEventListener('mousedown', this.#nabourListner)
+                this.addColour(t.cell, this.#highLightColour)
+                t.cell.setAttribute('selectable', "true")
             })
         }
 
         addPoint(elm, x, y) {
             this.#crntElm = elm
             this.#crntPath.push(this.#crntElm)
+            this.#crntElm.setAttribute('selectable', "false")
             this.#crntX = x
             this.#crntY = y
 
             this.#crntNabours.forEach(t => {
-                this.removeColour(t.cell, 'yellow')
-
-                t.cell.removeEventListener('mouseover', this.#nabourListner)
-                t.cell.removeEventListener('mousedown', this.#nabourListner)
+                this.removeColour(t.cell, this.#highLightColour)
+                t.cell.setAttribute('selectable', 'false')
             })
-            this.#crntNabours = this.getNabouringCells(x, y).filter(t => !this.#crntPath.includes(t.cell))
+            this.#crntNabours = this.getNabouringCells(x, y)
+                .filter(t =>
+                    !this.#crntPath.includes(t.cell)
+                )
             this.#crntNabours.forEach(t => {
-                this.addColour(t.cell, 'yellow')
-
-                t.cell.addEventListener('mouseover', this.#nabourListner)
-                t.cell.addEventListener('mousedown', this.#nabourListner)
+                this.addColour(t.cell, this.#highLightColour)
+                t.cell.setAttribute('selectable', 'true')
             })
 
-            this.addColour(this.#crntElm, 'green')
-
-            this.#crntElm.addEventListener('mouseover', this.#nabourListner)
-            this.#crntElm.addEventListener('mousedown', this.#nabourListner)
+            this.addColour(this.#crntElm, this.#selectColour)
         }
 
         endPath() {
             this.#crntNabours.forEach(t => {
-                this.removeColour(t.cell, 'yellow')
-                t.cell.removeEventListener('mouseover', this.#nabourListner)
-                t.cell.removeEventListener('mousedown', this.#nabourListner)
+                this.removeColour(t.cell, this.#highLightColour)
             })
 
             var path = this.#crntPath.map(t => Number(t.innerText)).sort((a, b) => a - b)
@@ -417,8 +417,9 @@
                 var colour = this.#colours.splice(Math.floor(Math.random() * this.#colours.length), 1)[0]
 
                 this.score += this.#crntPath.reduce((crnt, prev) => {
-                    this.removeColour(prev, 'green')
+                    this.removeColour(prev, this.#selectColour)
                     this.addColour(prev, colour)
+                    prev.setAttribute('selectable', 'false')
 
                     return (Math.ceil(Number(prev.innerText) / 25) + crnt)
                 }, 0)
@@ -427,7 +428,8 @@
             } else {
                 alert('Invalid Path')
                 this.#crntPath.forEach((t) => {
-                    this.removeColour(t, 'green')
+                    this.removeColour(t, this.#selectColour)
+                    t.setAttribute('selectable', 'false')
                 })
             }
 
@@ -456,10 +458,12 @@
 
         /**
          * @param {MouseEvent} e 
+         * @param {HTMLDataElement} e 
          */
-        #nabourListnerN(e) {
+        #nabourListnerN(elm, e) {
             console.log(e.buttons)
             if (e.buttons != 1) return;
+            if (!JSON.parse(elm.getAttribute('selectable'))) return;
             var x = Number(e.target.getAttribute('x')),
                 y = Number(e.target.getAttribute('y'))
             this.addPoint(
@@ -491,6 +495,9 @@
                     this.#elmGrid[x][y].innerText = this.#grid[x][y]
                     this.#elmGrid[x][y].setAttribute('x', x)
                     this.#elmGrid[x][y].setAttribute('y', y)
+                    this.#elmGrid[x][y].setAttribute('selectable', 'false')
+                    this.#elmGrid[x][y].addEventListener('mousedown', this.#nabourListnerN.bind(this, this.#elmGrid[x][y]))
+                    this.#elmGrid[x][y].addEventListener('mouseover', this.#nabourListnerN.bind(this, this.#elmGrid[x][y]))
                     row.appendChild(this.#elmGrid[x][y])
                     this.#provideFunctionality(this.#elmGrid[x][y], x, y)
                 }
@@ -545,6 +552,10 @@
     var number = document.createElement('p')
     var score = document.createElement('p')
 
+    finish.classList.add('finish')
+    number.classList.add('number')
+    score.classList.add('score')
+
     finish.innerText = 'Finish Attempt'
     number.innerText = `Number: ${ssGame.number}`
     score.innerText = `Score: ${ssGame.score}`
@@ -556,9 +567,9 @@
 
     if (!document.readyState == 'compleate') await new Promise(r => document.addEventListener('DOMContentLoaded', r));
 
-    document.body.appendChild(ssGame.gridElm)
-    document.body.appendChild(finish)
-    document.body.appendChild(number)
-    document.body.appendChild(score)
+    document.getElementById('gameGrid').replaceWith(ssGame.gridElm)
+    document.getElementById('finish').replaceWith(finish)
+    document.getElementById('number').replaceWith(number)
+    document.getElementById('score').replaceWith(score)
 
 })()
